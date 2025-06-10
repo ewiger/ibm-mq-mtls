@@ -22,3 +22,99 @@ This repository provides scripts to generate the necessary certificates for sett
 ```bash
 docker compose up -d
 ```
+
+## FAQ: MQSC Configuration Script (`scripts/20-config.mqsc`)
+
+**Q: When and how is `scripts/20-config.mqsc` executed?**
+
+- The `scripts/20-config.mqsc` file contains MQSC commands to configure the queue manager (create queue, channel, security, etc.).
+- This file is mounted into the container at `/etc/mqm/20-config.mqsc` via Docker Compose.
+- IBM MQ containers automatically execute any `.mqsc` files found in `/etc/mqm` during the initial creation of the queue manager (when the data directory is empty).
+- The script is only run the first time the queue manager is created (i.e., when the `qm1data` volume is empty). If the volume already exists, the script will not be re-run unless you delete the volume or reset the queue manager data.
+
+**To re-run the script:**
+1. Stop and remove the running container:
+
+```bash
+docker compose down
+```
+2. Remove the persistent data volume:
+
+```bash
+docker volume rm ibm-mq-mtls_qm1data
+```
+3. Start the container again:
+
+```bash
+docker compose up -d
+```
+This will re-initialize the queue manager and re-apply the configuration in `scripts/20-config.mqsc`.
+
+## Running MQSC Scripts on a Running Container
+
+If you need to apply configuration changes to a running IBM MQ container, you can use the provided `run-mqsc.sh` script. This script allows you to run any MQSC file against the active queue manager without restarting the container.
+
+**Usage:**
+
+```zsh
+chmod +x ./run-mqsc.sh
+./run-mqsc.sh [container_name] [mqsc_file]
+```
+- `container_name` (optional): Name of the running MQ container (default: `ibmmq`)
+- `mqsc_file` (optional): Path to the MQSC file to apply (default: `scripts/20-config.mqsc`)
+
+**Example:**
+
+```zsh
+./run-mqsc.sh
+```
+
+This will apply `scripts/20-config.mqsc` to the running `ibmmq` container.
+
+## How do I check the status of the queue manager and resources inside the container?
+
+1. Open a shell in the running MQ container:
+
+```zsh
+./run-mq-shell.sh
+```
+2. Start the MQSC command interface for your queue manager:
+
+```zsh
+runmqsc QM1
+```
+
+3. At the MQSC prompt, you can run commands such as:
+
+   - Show queue manager status:
+     ```
+     DISPLAY QMGR
+     ```
+   - Show all queues:
+     ```
+     DISPLAY QUEUE(*)
+     ```
+   - Show all channel statuses:
+     ```
+     DISPLAY CHSTATUS(*)
+     ```
+   - To exit MQSC:
+     ```
+     END
+     ```
+
+This allows you to inspect the state of your queue manager and resources interactively.
+
+## How to fix cipher on the client side?
+
+```
+DEFINE CHANNEL(CERT.SVRCONN_CLNT) CHLTYPE(CLNTCONN) +
+  QMNAME(QM1) +
+  CONNAME('ibmmq(1414)') +
+  SSLCIPH('TLS_RSA_WITH_AES_256_CBC_SHA256')
+```
+
+```
+export MQCHLLIB=/var/mqm/qmgrs/QM1/@ipcc/AMQCLCHL.TAB
+export MQCHLTAB=AMQCLCHL.TAB
+```

@@ -16,8 +16,7 @@ services:
     volumes:
       - qm1data:/mnt/mqm                        # persistent data
       - ./scripts/20-config.mqsc:/etc/mqm/20-config.mqsc
-      - ./mq-certs:/etc/mqm/pki/keys            # keystore lives here
-      # Run the bootstrap scripts to generate certs
+      - ${PWD}/mq-certs:/etc/mqm/pki/keys            # keystore lives here
   
 volumes:
   qm1data:
