@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  ibmmq:
+    image: ibmcom/mqcommunity:latest
+    container_name: ibmmq
+    restart: unless-stopped
+    environment:
+      LICENSE: accept
+      MQ_QMGR_NAME: QM1
+    ports:
+      - "1414:1414"   # MQ channel
+      - "9443:9443"   # Web console
+    volumes:
+      - qm1data:/mnt/mqm
+      - ./certs:/etc/mqm/pki/keys  # Bind your cert directory here
+
+volumes:
+  qm1data:
