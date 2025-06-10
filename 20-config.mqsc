@@ -1,0 +1,22 @@
+* -----------------------------------------------------------------
+* Queue-manager bootstrap for mutual-TLS only access
+* -----------------------------------------------------------------
+*  Queue
+DEFINE QLOCAL(Q1) REPLACE
+
+*  Server-connection channel secured with TLS
+DEFINE CHANNEL(CERT.SVRCONN) +
+       CHLTYPE(SVRCONN) TRPTYPE(TCP) +
+       SSLCIPH(TLS_RSA_WITH_AES_256_CBC_SHA256) +
+       SSLCAUTH(REQUIRED) +
+       MCAUSER('')
+
+*  Authorise only clients whose certificate DN matches exactly
+SET CHLAUTH(CERT.SVRCONN) TYPE(ADDRESSMAP) ADDRESS(*) +
+    USERSRC(MAP) MCAUSER('') +
+    SSLPEER('CN=Client,OU=MQ,O=IBM,C=US') ACTION(REPLACE)
+
+*  Pick up the new TLS keystore immediately
+REFRESH SECURITY TYPE(SSL)
+END
+

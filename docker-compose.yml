@@ -2,18 +2,26 @@ version: '3.8'
 
 services:
   ibmmq:
-    image: ibmcom/mqcommunity:latest
+    image: ibmcom/mq:latest
     container_name: ibmmq
     restart: unless-stopped
     environment:
       LICENSE: accept
       MQ_QMGR_NAME: QM1
+      MQ_ADMIN_PASSWORD: your_secure_password
+      CERT_PWD: password          # passphrase used by bootstrap-certs.sh
     ports:
       - "1414:1414"   # MQ channel
       - "9443:9443"   # Web console
     volumes:
-      - qm1data:/mnt/mqm
-      - ./certs:/etc/mqm/pki/keys  # Bind your cert directory here
-
+          volumes:
+      - qm1data:/mnt/mqm                        # persistent data
+      - ./scripts/bootstrap-certs.sh:/etc/mqm/bootstrap-certs.sh
+      - ./scripts/20-config.mqsc:/etc/mqm/20-config.mqsc
+      - ./mq-certs:/etc/mqm/pki/keys            # keystore lives here
+    # Run the bootstrap once, then hand off to the stock entrypoint
+    command: >
+      bash -c "/etc/mqm/bootstrap-certs.sh &&
+               exec /usr/local/bin/runmqserver"
 volumes:
   qm1data:
