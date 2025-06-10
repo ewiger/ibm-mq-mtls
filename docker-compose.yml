@@ -14,14 +14,10 @@ services:
       - "1414:1414"   # MQ channel
       - "9443:9443"   # Web console
     volumes:
-          volumes:
       - qm1data:/mnt/mqm                        # persistent data
-      - ./scripts/bootstrap-certs.sh:/etc/mqm/bootstrap-certs.sh
       - ./scripts/20-config.mqsc:/etc/mqm/20-config.mqsc
       - ./mq-certs:/etc/mqm/pki/keys            # keystore lives here
-    # Run the bootstrap once, then hand off to the stock entrypoint
-    command: >
-      bash -c "/etc/mqm/bootstrap-certs.sh &&
-               exec /usr/local/bin/runmqserver"
+      # Run the bootstrap scripts to generate certs
+  
 volumes:
   qm1data:
