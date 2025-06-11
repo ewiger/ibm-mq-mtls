@@ -11,7 +11,7 @@
       },
       "transmissionSecurity": {
         "cipherSpecification": "TLS_RSA_WITH_AES_256_CBC_SHA256",
-        "certificatePeerName": "CN=QM1,OU=MQ,O=IBM,C=US"
+        "certificateLabel": "ibmwebspheremqqm1_client"
       }
     }
   ]

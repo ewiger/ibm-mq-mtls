@@ -77,6 +77,12 @@ generate_initial_keystore "client" "clientkey.kdb" "$DN_CLIENT" "client_cert.arm
 import_peer_cert "clientkey.kdb" "qm1_cert.arm" "qm1_signer"
 import_peer_cert "serverkey.kdb" "client_cert.arm" "client_signer"
 
+# Step 4: stash passwords
+cd "$WORK_DIR"
+runmqakm -keydb -stashpw -db clientkey.kdb -pw "$CERT_PWD"
+runmqakm -keydb -stashpw -db serverkey.kdb -pw "$CERT_PWD"
+cd ..
+
 # Done
 echo -e "\n✅ All certificates and keystores created in $WORK_DIR"
 ls -l "$WORK_DIR"
