@@ -118,3 +118,7 @@ DEFINE CHANNEL(CERT.SVRCONN_CLNT) CHLTYPE(CLNTCONN) +
 export MQCHLLIB=/var/mqm/qmgrs/QM1/@ipcc/AMQCLCHL.TAB
 export MQCHLTAB=AMQCLCHL.TAB
 ```
+
+## What is the specs for JSON CCDT?
+
+[Complete list of CCDT channel attribute definitions for a client connection channel](https://www.ibm.com/docs/en/ibm-mq/9.2.x?topic=ccdt-json-examples)
