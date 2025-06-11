@@ -15,7 +15,7 @@ PORT = "1414"
 CONN_INFO = f"{HOST}({PORT})"
 
 # Optional: paths to SSL certs
-KEY_REPOSITORY = os.path.abspath("mq-certs/key")  # No file extension
+KEY_REPOSITORY = os.path.abspath("mq-certs/clientkey")  # No file extension
 
 # Set MQSSLKEYR environment if using mutual TLS
 os.environ["MQSSLKEYR"] = KEY_REPOSITORY

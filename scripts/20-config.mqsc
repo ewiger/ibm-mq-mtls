@@ -2,27 +2,35 @@
 * Queue-manager bootstrap for mTLS + DN filtering (no passwords)
 * -----------------------------------------------------------------
 
-* 1. Create local queue
-DEFINE QLOCAL(Q1) REPLACE
+* 0 - Set up the queue manager
 
-* 2. Define secure server-connection channel
+ALTER QMGR SSLKEYR('/etc/mqm/pki/keys/serverkey')
+
+
+* Define secure server-connection channel
 DEFINE CHANNEL(CERT.SVRCONN) +
        CHLTYPE(SVRCONN) TRPTYPE(TCP) +
        SSLCIPH(TLS_RSA_WITH_AES_256_CBC_SHA256) +
        SSLCAUTH(REQUIRED) CERTLABL('ibmwebspheremq')
 
-* 3. Allow only clients with a specific certificate DN
+
+REFRESH SECURITY TYPE(SSL)
+
+* Create local queue
+DEFINE QLOCAL(Q1) REPLACE
+
+* Allow only clients with a specific certificate DN
 SET CHLAUTH(CERT.SVRCONN) TYPE(SSLPEERMAP) +
     SSLPEER('CN=Client,OU=MQ,O=IBM,C=US') +
     USERSRC(MAP) MCAUSER('mqclient') ACTION(REPLACE)
 
-* 4. Disable password-based authentication
-ALTER QMGR CERTLABL('ibmwebspheremqqm1')
+* Disable password-based authentication
+ALTER QMGR CERTLABL('ibmwebspheremq')
 ALTER QMGR CONNAUTH('')
 REFRESH SECURITY TYPE(CONNAUTH)
 
 
-* 5. Apply TLS rules
+* Apply TLS rules
 REFRESH SECURITY TYPE(SSL)
 
 END

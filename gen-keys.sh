@@ -11,13 +11,13 @@ mkdir -p mq-certs
 
 # Step 1: Generate server keystore and public cert in server-certs
 ./bootstrap-server-certs.sh
-sudo chown $(id -u):$(id -g) server-certs/*
-chmod 644 server-certs/*
+# sudo chown $(id -u):$(id -g) server-certs/*
+# chmod 664 server-certs/*
 
 # Step 2: Generate client keystore and public cert in client-certs
 ./bootstrap-client-certs.sh
-sudo chown $(id -u):$(id -g) client-certs/*
-chmod 644 client-certs/*
+# sudo chown $(id -u):$(id -g) client-certs/*
+# chmod 664 client-certs/*
 
 # Step 3: Cross-import public certs
 cp server-certs/qm1_cert.arm client-certs/
