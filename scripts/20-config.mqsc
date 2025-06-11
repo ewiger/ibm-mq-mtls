@@ -2,7 +2,7 @@
 * Queue-manager bootstrap for mTLS + DN filtering (no passwords)
 * -----------------------------------------------------------------
 
-* 0 - Set up the queue manager
+* Set up the queue manager
 
 ALTER QMGR SSLKEYR('/etc/mqm/pki/keys/serverkey')
 
@@ -11,7 +11,8 @@ ALTER QMGR SSLKEYR('/etc/mqm/pki/keys/serverkey')
 DEFINE CHANNEL(CERT.SVRCONN) +
        CHLTYPE(SVRCONN) TRPTYPE(TCP) +
        SSLCIPH(TLS_RSA_WITH_AES_256_CBC_SHA256) +
-       SSLCAUTH(REQUIRED) CERTLABL('ibmwebspheremq')
+       SSLCAUTH(REQUIRED) +
+       REPLACE
 
 
 REFRESH SECURITY TYPE(SSL)
@@ -25,7 +26,7 @@ SET CHLAUTH(CERT.SVRCONN) TYPE(SSLPEERMAP) +
     USERSRC(MAP) MCAUSER('mqclient') ACTION(REPLACE)
 
 * Disable password-based authentication
-ALTER QMGR CERTLABL('ibmwebspheremq')
+ALTER QMGR CERTLABL('ibmwebspheremqqm1_server')
 ALTER QMGR CONNAUTH('')
 REFRESH SECURITY TYPE(CONNAUTH)
 

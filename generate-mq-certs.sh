@@ -80,3 +80,6 @@ import_peer_cert "serverkey.kdb" "client_cert.arm" "client_signer"
 # Done
 echo -e "\n✅ All certificates and keystores created in $WORK_DIR"
 ls -l "$WORK_DIR"
+
+# Set permissions for generated files
+chmod 0664 "$WORK_DIR"/*

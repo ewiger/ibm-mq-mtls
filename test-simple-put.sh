@@ -1,52 +1,28 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
-# Config
-CONTAINER_NAME="ibmmq"
-CERTS_DIR="/etc/mqm/pki/keys"             # Path inside container
-JSON_CCDT_PATH="/etc/mqm/client_ccdt.json"
+WORKDIR="$(pwd)"
+# Keystore base name *inside* the container (no .kdb / .sth extension)
+SSLKEY_BASENAME="${WORKDIR}/mq-certs/clientkey"
 
-QMGR_NAME="QM1"
-CHANNEL_NAME="CERT.SVRCONN"
-IBMMQHOST="localhost"  # Hostname or IP of the MQ server
-PORT=1414
-CIPHER="TLS_RSA_WITH_AES_256_CBC_SHA256"
+# Where the JSON CCDT will live *inside* the container
+CCDT_PATH="${WORKDIR}/client_ccdt.json"
+##############################################################################
 
-# Create JSON CCDT inside the running container
-docker exec -i "${CONTAINER_NAME}" bash -c "
-  set -e
-  cat > ${JSON_CCDT_PATH} <<EOF
-{
-  \"channel\": [
-    {
-      \"name\": \"${CHANNEL_NAME}\",
-      \"type\": \"clientConnection\",
-      \"clientConnection\": {
-        \"queueManagerName\": \"${QMGR_NAME}\",
-        \"connection\": [
-          { \"host\": \"${IBMMQHOST}\", \"port\": ${PORT} }
-        ]
-      },
-      \"transmissionSecurity\": {
-        \"cipherSpecification\": \"${CIPHER}\",
-        \"certificatePeerName\": \"CN=QM1,OU=MQ,O=IBM,C=US\"
-      }
-    }
-  ]
-}
-EOF
-"
+# === Ensure MQ tools are in PATH ===
+MQ_PATHS="/opt/mqm/bin:/opt/mqm/samp/bin"
+if [[ ":$PATH:" != *":/opt/mqm/bin:"* ]] || [[ ":$PATH:" != *":/opt/mqm/samp/bin:"* ]]; then
+  export PATH="$MQ_PATHS:$PATH"
+fi
 
-# Run the MQ put command inside the container using the JSON CCDT and MQSERVER
-# MQSERVER="${CHANNEL_NAME}/TCP/${IBMMQHOST}(${PORT})"
-# -e MQSERVER="$MQSERVER" \
-docker exec -e LICENSE=accept \
-            -e MQSSLKEYR=${CERTS_DIR}/key \
-            -e MQCCDTURL="file://${JSON_CCDT_PATH}" \
-            "${CONTAINER_NAME}" bash -c "
-  set -e
-  export PATH=\$PATH:/opt/mqm/bin:/opt/mqm/samp/bin
-  export MQTRACEPATH=/var/mqm/trace
-  export MQTRACELEVEL=2
-  echo \"foo\" | amqsputc Q1 QM1
-"
+export LICENSE=accept
+export MQSSLKEYR="${SSLKEY_BASENAME}"
+export MQCCDTURL="file://${CCDT_PATH}"
+
+# Mount certs and CCDT locally if not already in place
+# Ensure mq-certs and mq-ccdt are in the correct locations
+
+echo "🚀  Putting a test message over mTLS …"
+echo "foo" | amqsputc Q1 ""   # "" = use QM name from CCDT
+
+echo "🎉  Done — if no errors appeared, the message reached Q1 securely."
