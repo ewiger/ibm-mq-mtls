@@ -23,6 +23,9 @@ export MQCCDTURL="file://${CCDT_PATH}"
 # Ensure mq-certs and mq-ccdt are in the correct locations
 
 echo "🚀  Putting a test message over mTLS …"
+
+# strmqtrc -t api -p amqsputc
 echo "foo" | amqsputc Q1 ""   # "" = use QM name from CCDT
+# dspmqtrc /var/mqm/trace/AMQ*.TRC > trace_output.txt
 
 echo "🎉  Done — if no errors appeared, the message reached Q1 securely."
