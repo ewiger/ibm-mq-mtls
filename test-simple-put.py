@@ -19,7 +19,6 @@ CONN_INFO = f"{HOST}({PORT})"
 KEY_REPOSITORY = os.path.abspath("mq-certs/clientkey")  # No file extension
 print(f"Using key repository: {KEY_REPOSITORY}")
 os.environ["MQSSLKEYR"] = KEY_REPOSITORY
-print(f"Checking if {KEY_REPOSITORY}.kdb exists: {os.path.exists(KEY_REPOSITORY + '.kdb')}")
 
 # Set up connection descriptor (CD)
 cd = pymqi.CD()
