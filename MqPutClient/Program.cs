@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using IBM.WMQ;
 
 namespace MqPutClient
@@ -14,6 +16,28 @@ namespace MqPutClient
         static void Main(string[] args)
         {
             Console.WriteLine("Start of MqPutClient Application\n");
+
+            // Debug: List certificates in the CurrentUser\My store
+            using (var store = new X509Store(StoreName.My, StoreLocation.CurrentUser))
+            {
+                store.Open(OpenFlags.ReadOnly);
+                foreach (var cert in store.Certificates)
+                    Console.WriteLine($"[DEBUG] Found cert: {cert.Subject}");
+            }
+
+            // Set tracing via API (overrides environment/ini)
+            Environment.SetEnvironmentVariable("MQDOTNET_TRACE_ON", "1");
+            Environment.SetEnvironmentVariable("MQTRACELEVEL", "2");
+
+            // For XMS-specific tracing
+            Environment.SetEnvironmentVariable("XMSDOTNET_TRACE_SPEC", "*=all=enabled");
+
+            // Enable .NET tracing to mqtrace.log
+            // Trace.Listeners.Clear();
+            Trace.Listeners.Add(new TextWriterTraceListener("mqtrace.log"));
+            Trace.AutoFlush = true;
+            Trace.WriteLine("[TRACE] Starting MQ trace");
+
             try
             {
                 var mqPutClient = new Program { properties = new Dictionary<string, object>() };
@@ -23,8 +47,10 @@ namespace MqPutClient
             catch (Exception ex)
             {
                 Console.WriteLine("Error: {0}", ex);
+                Trace.WriteLine($"[ERROR] {ex}");
             }
             Console.WriteLine("End of MqPutClient Application");
+            Trace.WriteLine("[TRACE] End of MqPutClient Application");
         }
 
         bool ParseCommandline(string[] args)
@@ -51,6 +77,7 @@ namespace MqPutClient
             properties.Add(MQC.SSL_CIPHER_SPEC_PROPERTY, cmdlineArguments.GetValueOrDefault("-s", ""));
             properties.Add(MQC.SSL_PEER_NAME_PROPERTY, cmdlineArguments.GetValueOrDefault("-dn", ""));
             properties.Add(MQC.SSL_RESET_COUNT_PROPERTY, int.Parse(cmdlineArguments.GetValueOrDefault("-kr", "0")));
+            properties.Add("CertificateLabel", "ibmwebspheremqqm1_client");
             properties.Add("QueueName", cmdlineArguments["-q"]);
             properties.Add("MessageCount", int.Parse(cmdlineArguments.GetValueOrDefault("-n", "1")));
             properties.Add("sslCertRevocationCheck", bool.Parse(cmdlineArguments.GetValueOrDefault("-cr", "false")));
@@ -74,12 +101,15 @@ namespace MqPutClient
         {
             try
             {
+                var host = properties[MQC.HOST_NAME_PROPERTY].ToString();
+                var port = properties[MQC.PORT_PROPERTY].ToString();
+                var connName = $"{host}({port})";
+
                 var connProps = new Hashtable
                 {
                     { MQC.TRANSPORT_PROPERTY, MQC.TRANSPORT_MQSERIES_MANAGED },
-                    { MQC.HOST_NAME_PROPERTY, properties[MQC.HOST_NAME_PROPERTY] },
-                    { MQC.PORT_PROPERTY, properties[MQC.PORT_PROPERTY] },
-                    { MQC.CHANNEL_PROPERTY, properties[MQC.CHANNEL_PROPERTY] }
+                    { MQC.CHANNEL_PROPERTY, properties[MQC.CHANNEL_PROPERTY] },
+                    { MQC.CONNECTION_NAME_PROPERTY, connName }
                 };
 
                 if (!string.IsNullOrWhiteSpace(properties[MQC.SSL_CERT_STORE_PROPERTY].ToString()))
@@ -92,6 +122,7 @@ namespace MqPutClient
                     connProps[MQC.SSL_RESET_COUNT_PROPERTY] = properties[MQC.SSL_RESET_COUNT_PROPERTY];
                 if ((bool)properties["sslCertRevocationCheck"])
                     MQEnvironment.SSLCertRevocationCheck = true;
+
 
                 Console.WriteLine("[DEBUG] MQ Connection Properties:");
                 foreach (DictionaryEntry entry in connProps)

@@ -55,3 +55,6 @@ nunit-*.xml
 
 # Certificates
 *-certs/*
+
+mqtrace.log
+MqPutClient/mq_traces*
