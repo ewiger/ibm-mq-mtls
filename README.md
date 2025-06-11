@@ -23,7 +23,34 @@ This repository provides scripts to generate the necessary certificates for sett
 docker compose up -d
 ```
 
+## Running dotnet apps
+
+import certs into *USER keystore* (not MQ keystore) and run the .NET apps:
+
+```bash
+cd MQCertImporter
+dotnet run ../mq-certs/clientkey.p12 password
+```
+
+then run the client app:
+
+```bash
+cd MqPutClient
+dotnet run
+```
+
 ## FAQ: MQSC Configuration Script (`scripts/20-config.mqsc`)
+
+**Q: How do I troubleshoot connection issues with SSL**
+
+Test with a simple tool (like openssl s_client) to verify SSL handshake:
+
+```bash
+openssl s_client -connect localhost:1414
+```
+
+If this fails, the problem is at the SSL/TLS layer, not the MQ client.
+
 
 **Q: When and how is `scripts/20-config.mqsc` executed?**
 
